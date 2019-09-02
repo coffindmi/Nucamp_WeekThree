@@ -109,7 +109,7 @@ dishRouter.route('/:dishId/comments')
             dish.comments.push(req.body);
             dish.save()
             .then((dish) => {
-                Dishes,findById(dish._id)
+                Dishes.findById(dish._id)
                     .populate('comments.author')
                     .then((dish) => {
                         res.statusCode = 200;
@@ -130,7 +130,7 @@ dishRouter.route('/:dishId/comments')
     res.statusCode = 403;
     res.end(' Put operation not supported on /dishes/' + req.params.dishId + '/comments');
 })
-.delete(authenticate.verifyUser, authenticate.verifyAdmin,(req, res, next) => {
+.delete(authenticate.verifyUser, authenticate.verifyAdmin,(req, res , next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
         if (dish !== null ) {
@@ -218,7 +218,7 @@ dishRouter.route('/:dishId/comments/:commentId')
 .delete(authenticate.verifyUser, (req, res, next) => {
     Dishes.findById(req.params.dishId)
     .then((dish) => {
-        if (dish != null && dish.comments.id(req.params.commentId) != null && req.user._id == dish.comments.id(req.params.commentId).author.equals(req.user._id)) {
+        if (dish != null && dish.comments.id(req.params.commentId) != null && dish.comments.id(req.params.commentId).author.equals(req.user._id)) {
             dish.comments.id(req.params.commentId).remove();
             dish.save()
             .then((dish) => {
@@ -232,12 +232,13 @@ dishRouter.route('/:dishId/comments/:commentId')
             }, (err) => next(err));
         }
         else if (dish == null) {
-            err = new Error('Dish ' + req.params.dishId + ' not found');
+            err = new Error('Dish ' + req.params.dishId + ' not found'+ req.user._id);
             err.status = 404;
             return next(err);
         }
         else {
-            err = new Error('Comment ' + req.params.commentId + ' not found');
+            // user != creater of comment
+            err = new Error('Comment ' + req.params.commentId + ' not found' + req.user._id + ' ' + dish.comments.id(req.params.commentId).author);
             err.status = 404;
             return next(err);            
         }
